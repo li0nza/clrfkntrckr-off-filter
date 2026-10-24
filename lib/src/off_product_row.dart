@@ -1,0 +1,31 @@
+import 'package:clrfkntrckr_off_filter/off_rules.dart';
+
+/// One product as the filter writes it, with the fields the app stores.
+Map<String, Object?> offProductRow(OffProduct product) => {
+  'barcode': product.barcode,
+  'name': product.name,
+  'name_nl': product.nameNl,
+  'name_en': product.nameEn,
+  'brands': product.brands,
+  'quantity': product.quantity,
+  'categories': product.categories,
+  'basis': switch (product.basis) {
+    Basis.per100g => '100g',
+    Basis.per100ml => '100ml',
+  },
+  'energy_kcal': product.energyKcal,
+  'energy_kj': product.energyKj,
+  'energy_derived': product.derivedEnergy?.name,
+  'fat': product.fat,
+  'saturates': product.saturates,
+  'carbs': product.carbs,
+  'sugars': product.sugars,
+  'polyols': product.polyols,
+  'fibre': product.fibre,
+  'protein': product.protein,
+  'salt': product.salt,
+  'sodium': product.sodium,
+  'abv': product.abv,
+  'last_modified': product.lastModified?.toIso8601String(),
+  'failed_checks': [for (final check in failedChecks(product)) check.name],
+};

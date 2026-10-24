@@ -1,0 +1,12 @@
+name: clrfkntrckr_off_filter
+description: Filters the Open Food Facts export down to the Dutch products the clrfkntrckr app serves.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.13.4
+dependencies:
+  args: ^2.7.0
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.33.0
