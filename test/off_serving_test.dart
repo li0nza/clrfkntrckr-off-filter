@@ -25,6 +25,20 @@ void main() {
     expect(serving('35,5 gram'), (size: 35.5, slices: null));
     expect(serving('1 snee (35g)'), (size: 35.0, slices: 1));
     expect(serving('50 grammes', quantity: 50), (size: 50.0, slices: null));
+    expect(serving('100gram', quantity: '0'), (size: 100.0, slices: null));
+  });
+
+  test('never gives OFF\'s quantity the unit of the text', () {
+    expect(serving('35 g', quantity: 0.035, unit: 'kg'), (
+      size: 35.0,
+      slices: null,
+    ));
+    expect(serving('157 kcal (30 g)', quantity: 657, unit: 'kj'), (
+      size: 30.0,
+      slices: null,
+    ));
+    expect(serving('1 stuk', quantity: 0.035, unit: 'kg'), isNull);
+    expect(serving('157 kcal', quantity: 657, unit: 'kj'), isNull);
   });
 
   test('is none without a size, in another unit than the basis, or '

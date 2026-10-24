@@ -10,7 +10,9 @@ const sliceMaxGrams = 100.0;
 
 /// The serving from OFF's `serving_size` text and its `serving_quantity` and
 /// `serving_quantity_unit`, which OFF works out from that text; null when
-/// there is none, or it is in another unit than [basis]. With [bread], a
+/// there is none, or it is in another unit than [basis]. The size and its
+/// unit come from one of the two: OFF's quantity when it is above zero in g
+/// or ml, else the last weight or volume in the text. With [bread], a
 /// serving given as a weight alone ("35 g", "1 portie (35 g)") under
 /// [sliceMaxGrams] counts as one slice, as Dutch packs give bread per slice.
 OffServing? parseOffServing(
@@ -21,13 +23,14 @@ OffServing? parseOffServing(
   bool bread = false,
 }) {
   final text = servingSize is String ? servingSize.trim().toLowerCase() : '';
+  final quantity = _number(servingQuantity);
+  final quantityUnit = servingQuantityUnit is String
+      ? _unit(servingQuantityUnit.trim().toLowerCase())
+      : null;
   final written = _weight.allMatches(text).lastOrNull;
-  final size = _number(servingQuantity) ?? _number(written?[1]);
-  final unit =
-      (servingQuantityUnit is String
-          ? _unit(servingQuantityUnit.trim().toLowerCase())
-          : null) ??
-      (written == null ? null : _unit(written[2]!));
+  final (size, unit) = quantity != null && quantity > 0 && quantityUnit != null
+      ? (quantity, quantityUnit)
+      : (_number(written?[1]), written == null ? null : _unit(written[2]!));
   final basisUnit = switch (basis) {
     Basis.per100g => 'g',
     Basis.per100ml => 'ml',
