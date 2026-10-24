@@ -276,6 +276,61 @@ void main() {
     });
   });
 
+  group('kind and serving', () {
+    test('are none for a product without them', () {
+      final milk = kept(product());
+
+      expect(milk.kind, isNull);
+      expect(milk.servingSize, isNull);
+      expect(milk.servingSlices, isNull);
+    });
+
+    test('tag a loaf of bread and read its serving as a slice', () {
+      final bread = kept(
+        product({
+          'product_quantity_unit': 'g',
+          'categories_tags': ['en:breads', 'en:sliced-breads'],
+          'nutrition': nutrition({
+            'energy-kcal': 240,
+            'energy-kj': 1010,
+            'fat': 3,
+            'carbohydrates': 40,
+            'proteins': 10,
+          }),
+          'serving_size': '35 g',
+          'serving_quantity': 35,
+          'serving_quantity_unit': 'g',
+        }),
+      );
+
+      expect(bread.kind, FoodKind.bread);
+      expect(bread.servingSize, 35);
+      expect(bread.servingSlices, 1);
+    });
+
+    test('tag dry pasta by its categories and fibre', () {
+      final pasta = kept(
+        product({
+          'product_quantity_unit': 'g',
+          'categories_tags': ['en:pastas', 'en:dry-pastas'],
+          'nutrition': nutrition({
+            'energy-kcal': 351,
+            'energy-kj': 1490,
+            'fat': 1.5,
+            'carbohydrates': 70,
+            'fiber': 7,
+            'proteins': 13,
+          }),
+          'serving_size': '1 portion (80 g)',
+        }),
+      );
+
+      expect(pasta.kind, FoodKind.wholewheatPasta);
+      expect(pasta.servingSize, 80);
+      expect(pasta.servingSlices, isNull);
+    });
+  });
+
   group('drink', () {
     bool drink(List<String> categories) =>
         kept(product({'categories_tags': categories})).drink;

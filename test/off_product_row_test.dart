@@ -45,7 +45,33 @@ void main() {
       'abv': 5,
       'last_modified': '2026-09-07T13:26:46.000Z',
       'failed_checks': <String>[],
+      'kind': null,
+      'serving_size': null,
+      'serving_slices': null,
     });
+  });
+
+  test('stores the kind and the serving with its slices', () {
+    final row = offProductRow(
+      const OffProduct(
+        barcode: '8710400000007',
+        name: 'Volkoren casino',
+        categories: ['en:breads', 'en:sliced-breads'],
+        basis: Basis.per100g,
+        energyKcal: 230,
+        energyKj: 970,
+        fat: 3,
+        carbs: 38,
+        fibre: 6,
+        protein: 10,
+        servingSize: 35,
+        servingSlices: 1,
+      ),
+    );
+
+    expect(row, containsPair('kind', 'bread'));
+    expect(row, containsPair('serving_size', 35));
+    expect(row, containsPair('serving_slices', 1));
   });
 
   test('stores the maths checks a product fails by name', () {

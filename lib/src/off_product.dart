@@ -1,5 +1,7 @@
 import 'package:clrfkntrckr_off_filter/nutrition_checks.dart' show Basis;
 
+import 'food_kind.dart';
+
 export 'package:clrfkntrckr_off_filter/nutrition_checks.dart' show Basis;
 
 /// The energy unit filled in at 4.184 kJ/kcal because the label lacked it.
@@ -31,6 +33,8 @@ class OffProduct {
     this.sodium,
     this.abv,
     this.lastModified,
+    this.servingSize,
+    this.servingSlices,
   });
 
   final String barcode;
@@ -62,7 +66,17 @@ class OffProduct {
   final double? abv;
   final DateTime? lastModified;
 
+  /// One serving in g for a product per 100 g, in ml for one per 100 ml.
+  final double? servingSize;
+
+  /// The slices one serving is, when the label counts it in slices or the
+  /// product is bread sold per slice.
+  final int? servingSlices;
+
   String get sourceKey => 'off:$barcode';
+
+  FoodKind? get kind =>
+      offFoodKind(categories, basis, energyKcal, fibre: fibre);
 
   /// Logged into Drinks: `en:beverages` without `en:dairies` or
   /// `en:milk-substitutes`, the food database's rule, so milk and plant

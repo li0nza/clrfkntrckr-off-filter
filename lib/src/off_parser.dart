@@ -1,5 +1,7 @@
+import 'food_kind.dart';
 import 'gtin.dart';
 import 'off_product.dart';
+import 'off_serving.dart';
 
 const kjPerKcal = 4.184;
 
@@ -83,7 +85,17 @@ ParsedProduct parseOffProduct(
     return const Dropped(DropReason.noMacros);
   }
 
-  final categories = json['categories_tags'];
+  final categoryTags = json['categories_tags'];
+  final categories = categoryTags is List<Object?>
+      ? categoryTags.whereType<String>().toList()
+      : const <String>[];
+  final serving = parseOffServing(
+    json['serving_size'],
+    json['serving_quantity'],
+    json['serving_quantity_unit'],
+    basis: label.basis,
+    bread: offFoodKind(categories, label.basis, kcal) == FoodKind.bread,
+  );
   final lastModified = json['last_modified_t'];
   return Kept(
     OffProduct(
@@ -93,9 +105,7 @@ ParsedProduct parseOffProduct(
       nameEn: nameEn,
       brands: _text(json['brands']),
       quantity: _text(json['quantity']),
-      categories: categories is List<Object?>
-          ? categories.whereType<String>().toList()
-          : const [],
+      categories: categories,
       basis: label.basis,
       energyKcal: kcal,
       energyKj: kj,
@@ -116,6 +126,8 @@ ParsedProduct parseOffProduct(
               isUtc: true,
             )
           : null,
+      servingSize: serving?.size,
+      servingSlices: serving?.slices,
     ),
   );
 }

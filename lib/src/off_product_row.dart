@@ -28,4 +28,7 @@ Map<String, Object?> offProductRow(OffProduct product) => {
   'abv': product.abv,
   'last_modified': product.lastModified?.toIso8601String(),
   'failed_checks': [for (final check in failedChecks(product)) check.name],
+  'kind': product.kind?.name,
+  'serving_size': product.servingSize,
+  'serving_slices': product.servingSlices,
 };
