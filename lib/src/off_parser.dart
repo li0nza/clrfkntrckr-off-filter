@@ -128,6 +128,7 @@ ParsedProduct parseOffProduct(
           : null,
       servingSize: serving?.size,
       servingSlices: serving?.slices,
+      servingWord: serving?.word,
     ),
   );
 }

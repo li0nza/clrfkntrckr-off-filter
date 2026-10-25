@@ -57,7 +57,7 @@ One JSON object per line, one line per kept product, in the order of the export:
 | `last_modified` | When the product last changed on OFF (UTC) |
 | `failed_checks` | The maths checks the product fails |
 | `kind` | `bread` for a loaf to slice, or a dry grain to weigh cooked: `whitePasta`, `wholewheatPasta`, `whiteRice`, `brownRice`, `couscous`, `quinoa`, `bulgur`; null otherwise. Taken from the categories: a bread under 350 kcal per 100 g, a grain per 100 g with at least 300 kcal per 100 g; a pasta counts as wholewheat from 6 g fibre and a rice as brown from 2.5 g when its categories don't say |
-| `serving_size`, `serving_slices` | One serving in g (ml for a product per 100 ml): OFF's `serving_quantity` when it is above zero in g or ml, else the last weight or volume in `serving_size`, never one's number with the other's unit; and the slices it counts when its text names them ("2 sneetjes (70 g)"); for bread, a serving given as a weight alone under 100 g counts as one slice |
+| `serving_size`, `serving_slices`, `serving_word` | One serving in g (ml for a product per 100 ml): OFF's `serving_quantity` when it is above zero in g or ml, else the last weight or volume in `serving_size`, never one's number with the other's unit; its printed single-unit word when unambiguous ("1 plak (33 g)" gives "plak"); and the slices it counts when its text names them ("2 sneetjes (70 g)"); for bread, a serving given as a weight alone under 100 g counts as one slice |
 
 No images or other fields from the export are included.
 

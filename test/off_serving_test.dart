@@ -1,15 +1,79 @@
 import 'package:clrfkntrckr_off_filter/off_rules.dart';
 import 'package:test/test.dart';
 
-OffServing? serving(
+({double size, int? slices})? serving(
   Object? text, {
   Object? quantity,
   Object? unit,
   Basis basis = Basis.per100g,
   bool bread = false,
-}) => parseOffServing(text, quantity, unit, basis: basis, bread: bread);
+}) {
+  final result = parseOffServing(
+    text,
+    quantity,
+    unit,
+    basis: basis,
+    bread: bread,
+  );
+  return result == null ? null : (size: result.size, slices: result.slices);
+}
 
 void main() {
+  test(
+    'keeps an unambiguous single serving word, with its printed spelling',
+    () {
+      for (final (text, word) in [
+        ('1 plak (33 g)', 'plak'),
+        ('per plak (33 g)', 'plak'),
+        ('1 stuk (40 g)', 'stuk'),
+        ('1 × Koek (25 g)', 'Koek'),
+        ('1 bol = 50 g', 'bol'),
+        ('33 g', null),
+        ('per portie 30 g', null),
+        ('per 100 g', null),
+        ('about 30 g', null),
+        ('1 serving (30 g)', null),
+        ('2 sneetjes (70 g)', null),
+        ('2 koekjes (30 g)', null),
+        ('1/2 reep (30 g)', null),
+        ('157 kcal (30 g)', null),
+        ('about one handful (30 g)', null),
+        ('1 plak (33 g) prepared', null),
+        ('1 plak (30 g) / 2 plakken (60 g)', null),
+      ]) {
+        final result = parseOffServing(text, null, null, basis: Basis.per100g);
+        expect(result, isNotNull, reason: text);
+        expect(result!.word, word, reason: text);
+      }
+      expect(
+        parseOffServing(
+          '1 glas (200 ml)',
+          null,
+          null,
+          basis: Basis.per100ml,
+        )!.word,
+        'glas',
+      );
+      expect(
+        parseOffServing('1 plak', 33, 'g', basis: Basis.per100g)!.word,
+        'plak',
+      );
+      expect(
+        parseOffServing('per portie', 33, 'g', basis: Basis.per100g)!.word,
+        isNull,
+      );
+      expect(
+        parseOffServing('unreadable text', 33, 'g', basis: Basis.per100g)!.word,
+        isNull,
+      );
+      expect(parseOffServing(33, 33, 'g', basis: Basis.per100g)!.word, isNull);
+      expect(
+        parseOffServing('1 plak (33 g)', 33, 'ml', basis: Basis.per100g),
+        isNull,
+      );
+    },
+  );
+
   test('takes OFF\'s serving quantity in the basis unit', () {
     expect(serving('1 portie (35 g)', quantity: 35, unit: 'g'), (
       size: 35.0,

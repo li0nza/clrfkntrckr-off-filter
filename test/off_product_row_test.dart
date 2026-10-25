@@ -48,6 +48,7 @@ void main() {
       'kind': null,
       'serving_size': null,
       'serving_slices': null,
+      'serving_word': null,
     });
   });
 
@@ -66,12 +67,14 @@ void main() {
         protein: 10,
         servingSize: 35,
         servingSlices: 1,
+        servingWord: 'snee',
       ),
     );
 
     expect(row, containsPair('kind', 'bread'));
     expect(row, containsPair('serving_size', 35));
     expect(row, containsPair('serving_slices', 1));
+    expect(row, containsPair('serving_word', 'snee'));
   });
 
   test('stores the maths checks a product fails by name', () {

@@ -306,6 +306,7 @@ void main() {
       expect(bread.kind, FoodKind.bread);
       expect(bread.servingSize, 35);
       expect(bread.servingSlices, 1);
+      expect(bread.servingWord, isNull);
     });
 
     test('tag dry pasta by its categories and fibre', () {

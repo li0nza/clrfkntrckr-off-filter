@@ -31,4 +31,5 @@ Map<String, Object?> offProductRow(OffProduct product) => {
   'kind': product.kind?.name,
   'serving_size': product.servingSize,
   'serving_slices': product.servingSlices,
+  'serving_word': product.servingWord,
 };

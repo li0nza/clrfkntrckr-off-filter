@@ -2,8 +2,8 @@ import 'package:clrfkntrckr_off_filter/nutrition_checks.dart' show Basis;
 
 /// One serving as an OFF product gives it: [size] in g for a product per
 /// 100 g, in ml for one per 100 ml, and the [slices] it counts when its text
-/// names them ("2 sneetjes (70 g)").
-typedef OffServing = ({double size, int? slices});
+/// names them ("2 sneetjes (70 g)"), with a printed single-unit [word].
+typedef OffServing = ({double size, int? slices, String? word});
 
 /// A bread serving at or above this is a reference amount, not a slice.
 const sliceMaxGrams = 100.0;
@@ -43,7 +43,11 @@ OffServing? parseOffServing(
       : bread && _plain.hasMatch(text) && size < sliceMaxGrams
       ? 1
       : null;
-  return (size: size, slices: slices == 0 ? null : slices);
+  return (
+    size: size,
+    slices: slices == 0 ? null : slices,
+    word: _servingWord(servingSize),
+  );
 }
 
 /// A weight or volume in a serving text: "35 g", "35,5 gram", "(250 ml)".
@@ -79,3 +83,49 @@ double? _number(Object? value) {
   };
   return number != null && number.isFinite ? number : null;
 }
+
+/// Only an unambiguous single unit names the whole serving. Multiple units
+/// remain one generic portion; bread's slice count is parsed independently.
+String? _servingWord(Object? value) {
+  if (value is! String) return null;
+  final text = value.trim();
+  final match = _namedServing.firstMatch(text) ?? _unitOnly.firstMatch(text);
+  if (match == null) return null;
+  final word = match[1]!;
+  if (_genericWords.contains(word.toLowerCase())) return null;
+  return word;
+}
+
+const _genericWords = {
+  'portion',
+  'portie',
+  'serving',
+  'serve',
+  'portions',
+  'porties',
+  'servings',
+  'porción',
+  'porzione',
+  'per',
+  'about',
+  'approx',
+  'approximately',
+  'circa',
+  'g',
+  'ml',
+};
+
+final _namedServing = RegExp(
+  r'^(?:(?:1\s*(?:[x×]\s*)?|per\s+))?'
+  r"([a-zÀ-ÖØ-öø-ÿ]+(?:[-'][a-zÀ-ÖØ-öø-ÿ]+)*)\s*"
+  r'(?:[=(]\s*)?\d+(?:[.,]\d+)?\s*'
+  r'(?:g|gr|gram|grams|grammes|grammi|gramm|ml)\s*\)?$',
+  caseSensitive: false,
+);
+
+// A trustworthy serving_quantity can supply the weight absent from the text.
+final _unitOnly = RegExp(
+  r'^(?:1\s*(?:[x×]\s*)?|per\s+)'
+  r"([a-zÀ-ÖØ-öø-ÿ]+(?:[-'][a-zÀ-ÖØ-öø-ÿ]+)*)$",
+  caseSensitive: false,
+);

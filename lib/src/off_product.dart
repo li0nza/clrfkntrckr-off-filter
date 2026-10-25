@@ -35,6 +35,7 @@ class OffProduct {
     this.lastModified,
     this.servingSize,
     this.servingSlices,
+    this.servingWord,
   });
 
   final String barcode;
@@ -72,6 +73,9 @@ class OffProduct {
   /// The slices one serving is, when the label counts it in slices or the
   /// product is bread sold per slice.
   final int? servingSlices;
+
+  /// The printed single-unit word, never translated.
+  final String? servingWord;
 
   String get sourceKey => 'off:$barcode';
 
