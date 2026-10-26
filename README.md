@@ -2,7 +2,7 @@
 
 The filter that turns the [Open Food Facts](https://world.openfoodfacts.org) (OFF) product export into the Dutch subset used by clrfkntrckr, a calorie tracker for the Netherlands (working name). The app's food data includes this subset, which makes it a derivative database of Open Food Facts; this repository publishes the method that produces it, as the Open Database License asks.
 
-The rules are a snapshot of the app's, copied from its source on 2026-10-24. The app's repository is private; this copy is updated when its rules change.
+The rules are a snapshot of the app's, copied from its source on 2026-10-26. The app's repository is private; this copy is updated when its rules change.
 
 ## What it keeps
 
@@ -23,7 +23,8 @@ A few things are filled in or flagged rather than dropped:
 
 - A pack sold in ml counts as per 100 ml, even when OFF says per 100 g. OFF's form defaults to 100 g, also for drinks.
 - When the label gives only kcal or only kJ, the other is derived at 4.184 kJ/kcal and marked in `energy_derived`.
-- Implausible values stay in. Each product lists the maths checks it fails in `failed_checks`; derived energy counts as not declared there.
+- When one energy contradicts both the other energy (the kJ/kcal ratio check fails) and the macros (its own energy check fails), while the other energy fits the macros (its own check passes), drop the contradicting value and derive it from the other at 4.184 kJ/kcal, marked in `energy_derived`.
+- Other implausible values stay in, including when both energies are off the macros, both fit them, or the ratio check passes or is skipped below 20 kcal. Each product lists the maths checks it fails in `failed_checks`; derived energy counts as not declared there.
 
 The maths checks:
 

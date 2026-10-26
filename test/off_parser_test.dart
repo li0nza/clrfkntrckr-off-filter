@@ -1,3 +1,4 @@
+import 'package:clrfkntrckr_off_filter/nutrition_checks.dart';
 import 'package:clrfkntrckr_off_filter/off_rules.dart';
 import 'package:clrfkntrckr_off_filter/testing.dart';
 import 'package:test/test.dart';
@@ -194,6 +195,149 @@ void main() {
       expect(parsed.energyKcal, closeTo(46.37, 0.01));
       expect(parsed.derivedEnergy, DerivedEnergy.kcal);
     });
+
+    for (final scanned in [false, true]) {
+      for (final legacy in [false, true]) {
+        test(
+          'repairs kcal from kJ for the cheese (${legacy ? 'legacy' : 'current'}, '
+          '${scanned ? 'scan' : 'import'})',
+          () {
+            const cheese = {
+              'energy-kcal': 1060.31636,
+              'energy-kj': 1464,
+              'fat': 29,
+              'saturated-fat': 20,
+              'carbohydrates': 0,
+              'proteins': 23,
+              'salt': 1.9,
+            };
+            final json = product({
+              'code': '8718907844994',
+              'product_name': 'Goudse Jonge Kaas 48+',
+              'brands': 'De Zaanse Hoeve',
+              'product_quantity_unit': 'g',
+              'nutrition': legacy ? null : nutrition(cheese),
+              'nutriments': {
+                for (final entry in cheese.entries)
+                  '${entry.key}_100g': entry.value,
+              },
+            });
+            final parsed =
+                (parseOffProduct(json, scanned: scanned) as Kept).product;
+
+            expect(parsed.energyKj, 1464);
+            expect(parsed.energyKcal, 1464 / 4.184);
+            expect(parsed.derivedEnergy, DerivedEnergy.kcal);
+            expect(failedChecks(parsed), isEmpty);
+          },
+        );
+      }
+    }
+
+    test('repairs kJ from kcal and keeps unrelated failed checks', () {
+      final parsed = kept(
+        product({
+          'nutrition': nutrition({...milk, 'energy-kj': 900, 'sugars': 6}),
+        }),
+      );
+
+      expect(parsed.energyKcal, 46);
+      expect(parsed.energyKj, 46 * 4.184);
+      expect(parsed.derivedEnergy, DerivedEnergy.kj);
+      expect(failedChecks(parsed), {Check.sugarsWithinCarbs});
+    });
+
+    test(
+      'treats repaired energy as undeclared even outside its macro range',
+      () {
+        final parsed = kept(
+          product({
+            'product_quantity_unit': 'g',
+            'nutrition': nutrition({
+              'energy-kcal': 1800,
+              'energy-kj': 3330,
+              'fat': 100,
+              'carbohydrates': 0,
+              'proteins': 0,
+              'fiber': 0,
+            }),
+          }),
+        );
+
+        expect(parsed.energyKj, 3330);
+        expect(parsed.energyKcal, 3330 / 4.184);
+        expect(parsed.derivedEnergy, DerivedEnergy.kcal);
+        expect(failedChecks(parsed), isEmpty);
+      },
+    );
+
+    for (final scenario in [
+      (
+        name: 'leaves both energies off the macros as published',
+        kcal: 146.0,
+        kj: 294.0,
+        failed: {Check.energyKcal, Check.energyKj, Check.energyRatio},
+      ),
+      (
+        name: 'leaves a ratio mismatch when both energies fit the macros',
+        kcal: 50.0,
+        kj: 180.0,
+        failed: {Check.energyRatio},
+      ),
+      (
+        name: 'leaves kcal below 20 when the ratio check is skipped',
+        kcal: 10.0,
+        kj: 194.0,
+        failed: {Check.energyKcal},
+      ),
+      (
+        name: 'leaves an energy mismatch when the ratio passes',
+        kcal: 53.3,
+        kj: 223.0,
+        failed: {Check.energyKcal},
+      ),
+    ]) {
+      test(scenario.name, () {
+        final parsed = kept(
+          product({
+            'nutrition': nutrition({
+              ...milk,
+              'energy-kcal': scenario.kcal,
+              'energy-kj': scenario.kj,
+            }),
+          }),
+        );
+
+        expect(parsed.energyKcal, scenario.kcal);
+        expect(parsed.energyKj, scenario.kj);
+        expect(parsed.derivedEnergy, isNull);
+        expect(failedChecks(parsed), scenario.failed);
+      });
+    }
+
+    for (final scenario in [
+      (name: 'fibre', nutrients: {'fiber': 20}, kcal: 86, kj: 355),
+      (name: 'polyols', nutrients: {'polyols': 4.7}, kcal: 35, kj: 140),
+      (name: 'ABV', nutrients: {'alcohol': 10}, kcal: 102, kj: 424),
+    ]) {
+      test('counts ${scenario.name} when repairing energy', () {
+        final parsed = kept(
+          product({
+            'nutrition': nutrition({
+              ...milk,
+              ...scenario.nutrients,
+              'energy-kcal': scenario.kcal * 3,
+              'energy-kj': scenario.kj,
+            }, per: '100ml'),
+          }),
+        );
+
+        expect(parsed.energyKj, scenario.kj);
+        expect(parsed.energyKcal, scenario.kj / 4.184);
+        expect(parsed.derivedEnergy, DerivedEnergy.kcal);
+        expect(failedChecks(parsed), isEmpty);
+      });
+    }
 
     test('reads a legacy energy value as kJ', () {
       final legacy = {...milk}

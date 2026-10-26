@@ -4,7 +4,7 @@ import 'food_kind.dart';
 
 export 'package:clrfkntrckr_off_filter/nutrition_checks.dart' show Basis;
 
-/// The energy unit filled in at 4.184 kJ/kcal because the label lacked it.
+/// The energy unit derived at 4.184 kJ/kcal when missing or inconsistent.
 enum DerivedEnergy { kcal, kj }
 
 /// An Open Food Facts product as stored in the food database. Nutrients are

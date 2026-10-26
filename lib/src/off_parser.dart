@@ -1,3 +1,5 @@
+import 'package:clrfkntrckr_off_filter/nutrition_checks.dart';
+
 import 'food_kind.dart';
 import 'gtin.dart';
 import 'off_product.dart';
@@ -70,13 +72,6 @@ ParsedProduct parseOffProduct(
   var kj = label.value('energy-kj', 'kJ');
   if (kcal == null && kj == null) kj = label.value('energy', 'kJ');
   if (kcal == null && kj == null) return const Dropped(DropReason.noEnergy);
-  final derivedEnergy = kcal == null
-      ? DerivedEnergy.kcal
-      : kj == null
-      ? DerivedEnergy.kj
-      : null;
-  kcal ??= kj! / kjPerKcal;
-  kj ??= kcal * kjPerKcal;
 
   final fat = label.value('fat', 'g');
   final carbs = label.value('carbohydrates', 'g');
@@ -84,6 +79,43 @@ ParsedProduct parseOffProduct(
   if (fat == null || carbs == null || protein == null) {
     return const Dropped(DropReason.noMacros);
   }
+  final polyols = label.value('polyols', 'g');
+  final fibre = label.value('fiber', 'g');
+  final abv = label.value('alcohol', '% vol');
+  if (kcal != null && kj != null) {
+    final checks = {
+      for (final result in checkLabel(
+        NutritionLabel(
+          basis: label.basis,
+          energyKcal: Amount.exact(kcal),
+          energyKj: Amount.exact(kj),
+          fat: Amount.exact(fat),
+          carbs: Amount.exact(carbs),
+          protein: Amount.exact(protein),
+          polyols: polyols == null ? null : Amount.exact(polyols),
+          fibre: fibre == null ? null : Amount.exact(fibre),
+          abv: abv,
+        ),
+      ))
+        result.check: result.outcome,
+    };
+    if (checks[Check.energyRatio] == Outcome.fail) {
+      if (checks[Check.energyKcal] == Outcome.fail &&
+          checks[Check.energyKj] == Outcome.pass) {
+        kcal = null;
+      } else if (checks[Check.energyKj] == Outcome.fail &&
+          checks[Check.energyKcal] == Outcome.pass) {
+        kj = null;
+      }
+    }
+  }
+  final derivedEnergy = kcal == null
+      ? DerivedEnergy.kcal
+      : kj == null
+      ? DerivedEnergy.kj
+      : null;
+  kcal ??= kj! / kjPerKcal;
+  kj ??= kcal * kjPerKcal;
 
   final categoryTags = json['categories_tags'];
   final categories = categoryTags is List<Object?>
@@ -114,12 +146,12 @@ ParsedProduct parseOffProduct(
       saturates: label.value('saturated-fat', 'g'),
       carbs: carbs,
       sugars: label.value('sugars', 'g'),
-      polyols: label.value('polyols', 'g'),
-      fibre: label.value('fiber', 'g'),
+      polyols: polyols,
+      fibre: fibre,
       protein: protein,
       salt: label.value('salt', 'g'),
       sodium: label.value('sodium', 'g'),
-      abv: label.value('alcohol', '% vol'),
+      abv: abv,
       lastModified: lastModified is int
           ? DateTime.fromMillisecondsSinceEpoch(
               lastModified * 1000,
